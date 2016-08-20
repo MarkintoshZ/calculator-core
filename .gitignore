@@ -6,12 +6,8 @@ npm-debug.log*
 # Dependencies
 node_modules/
 
-# Typings
-typings/
-
 # Coverage
 coverage
-.nyc_output
 
 # Transpiled files
 build/
@@ -19,6 +15,15 @@ build/
 # VS Code
 .vscode
 !.vscode/tasks.js
+
+# JetBrains IDEs
+.idea/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
 
 # Misc
 .DS_Store
