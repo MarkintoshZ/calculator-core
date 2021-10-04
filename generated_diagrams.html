@@ -73,7 +73,7 @@
                 "definition": [
                   {
                     "type": "NonTerminal",
-                    "name": "expression",
+                    "name": "additionExpression",
                     "idx": 0
                   }
                 ]
@@ -103,18 +103,6 @@
         "idx": 0,
         "pattern": "="
       },
-      {
-        "type": "NonTerminal",
-        "name": "expression",
-        "idx": 0
-      }
-    ]
-  },
-  {
-    "type": "Rule",
-    "name": "expression",
-    "orgText": "",
-    "definition": [
       {
         "type": "NonTerminal",
         "name": "additionExpression",
@@ -299,7 +287,7 @@
                 "name": "NumberLiteral",
                 "label": "NumberLiteral",
                 "idx": 0,
-                "pattern": "[1-9]\\d*"
+                "pattern": "[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"
               }
             ]
           },
@@ -343,7 +331,7 @@
       },
       {
         "type": "NonTerminal",
-        "name": "expression",
+        "name": "additionExpression",
         "idx": 0
       },
       {
@@ -376,7 +364,7 @@
       },
       {
         "type": "NonTerminal",
-        "name": "expression",
+        "name": "atomicExpression",
         "idx": 0,
         "label": "base"
       },
@@ -389,7 +377,7 @@
       },
       {
         "type": "NonTerminal",
-        "name": "expression",
+        "name": "atomicExpression",
         "idx": 2,
         "label": "exponent"
       },
