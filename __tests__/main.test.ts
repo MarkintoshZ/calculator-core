@@ -1,42 +1,142 @@
-import { Delays, greeter } from '../src/main';
+import { parse } from '../src/main';
 
-describe('greeter function', () => {
-  const name = 'John';
-  let hello: string;
-
-  let timeoutSpy: jest.SpyInstance;
-
-  // Act before assertions
-  beforeAll(async () => {
-    // Read more about fake timers
-    // http://facebook.github.io/jest/docs/en/timer-mocks.html#content
-    // Jest 27 now uses "modern" implementation of fake timers
-    // https://jestjs.io/blog/2021/05/25/jest-27#flipping-defaults
-    // https://github.com/facebook/jest/pull/5171
-    jest.useFakeTimers();
-    timeoutSpy = jest.spyOn(global, 'setTimeout');
-
-    const p: Promise<string> = greeter(name);
-    jest.runOnlyPendingTimers();
-    hello = await p;
+describe('parsing literals', () => {
+  it('parse integer', () => {
+    const { result } = parse('69');
+    expect(result).toStrictEqual([69]);
   });
 
-  // Teardown (cleanup) after assertions
-  afterAll(() => {
-    timeoutSpy.mockRestore();
+  it('parse negative integer', () => {
+    const { result } = parse('-69');
+    expect(result).toStrictEqual([-69]);
   });
 
-  // Assert if setTimeout was called properly
-  it('delays the greeting by 2 seconds', () => {
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(setTimeout).toHaveBeenLastCalledWith(
-      expect.any(Function),
-      Delays.Long,
-    );
+  // it('parse float', () => {
+  //   const { result } = parse('6.9');
+  //   expect(result).toStrictEqual([6.9]);
+  // });
+
+  // it('parse float 2', () => {
+  //   const { result } = parse('69.69');
+  //   expect(result).toStrictEqual([69.69]);
+  // });
+
+  // it('parse negative float', () => {
+  //   const { result } = parse('-3.14');
+  //   expect(result).toStrictEqual([-3.14]);
+  // });
+});
+
+describe('addition expression', () => {
+  it('two integers with spaces in between', () => {
+    const { result: res1 } = parse('1 + 2');
+    expect(res1).toStrictEqual([3]);
+    const { result: res2 } = parse('1 - 2');
+    expect(res2).toStrictEqual([-1]);
   });
 
-  // Assert greeter result
-  it('greets a user with `Hello, {name}` message', () => {
-    expect(hello).toBe(`Hello, ${name}`);
+  it('two integers with no spaces in between', () => {
+    const { result: res1 } = parse('1+2');
+    expect(res1).toStrictEqual([3]);
+    const { result: res2 } = parse('1-2');
+    expect(res2).toStrictEqual([-1]);
+  });
+
+  it('two negative integers', () => {
+    const { result: res1 } = parse('-1 + -2');
+    expect(res1).toStrictEqual([-3]);
+    const { result: res2 } = parse('-1 - -2');
+    expect(res2).toStrictEqual([1]);
+  });
+
+  it('positive and negative integer', () => {
+    const { result: res1 } = parse('1 + -2');
+    expect(res1).toStrictEqual([-1]);
+    const { result: res2 } = parse('1 - -2');
+    expect(res2).toStrictEqual([3]);
+  });
+
+  it('negative and positive integer', () => {
+    const { result: res1 } = parse('-1 + 2');
+    expect(res1).toStrictEqual([1]);
+    const { result: res2 } = parse('-1 - 2');
+    expect(res2).toStrictEqual([-3]);
   });
 });
+
+describe('multiplication expression', () => {
+  it('two integers with spaces in between', () => {
+    const { result: res1 } = parse('1 * 2');
+    expect(res1).toStrictEqual([2]);
+    const { result: res2 } = parse('1 / 2');
+    expect(res2).toStrictEqual([0.5]);
+  });
+
+  it('two integers with no spaces in between', () => {
+    const { result: res1 } = parse('1*2');
+    expect(res1).toStrictEqual([2]);
+    const { result: res2 } = parse('1/2');
+    expect(res2).toStrictEqual([0.5]);
+  });
+
+  it('two negative integers', () => {
+    const { result: res1 } = parse('-1 * -2');
+    expect(res1).toStrictEqual([2]);
+    const { result: res2 } = parse('-1 / -2');
+    expect(res2).toStrictEqual([0.5]);
+  });
+
+  it('positive and negative integer', () => {
+    const { result: res1 } = parse('1 * -2');
+    expect(res1).toStrictEqual([-2]);
+    const { result: res2 } = parse('1 / -2');
+    expect(res2).toStrictEqual([-0.5]);
+  });
+
+  it('negative and positive integer', () => {
+    const { result: res1 } = parse('-1 * 2');
+    expect(res1).toStrictEqual([-2]);
+    const { result: res2 } = parse('-1 / 2');
+    expect(res2).toStrictEqual([-0.5]);
+  });
+});
+
+describe('negation expression', () => {
+  it('single negative integer', () => {
+    const { result } = parse('-3102');
+    expect(result).toStrictEqual([-3102]);
+  })
+});
+
+describe('power expression', () => {
+  it('two integers with spaces in between', () => {
+    const { result } = parse('2 ^ 3');
+    expect(result).toStrictEqual([8]);
+  });
+
+  it('two integers with no spaces in between', () => {
+    const { result } = parse('2^3');
+    expect(result).toStrictEqual([8]);
+  });
+
+  it('two negative integers', () => {
+    const { result } = parse('-2^-3');
+    expect(result).toStrictEqual([-0.125]);
+  });
+
+  it('positive and negative integer', () => {
+    const { result } = parse('2^-3');
+    expect(result).toStrictEqual([0.125]);
+  });
+
+  it('negative and positive integer', () => {
+    const { result } = parse('-2^3');
+    expect(result).toStrictEqual([-8]);
+  });
+
+  it('three integers', () => {
+    const { result } = parse('2 ^ 3 ^ 4');
+    expect(result).toStrictEqual([4096]);
+  });
+});
+

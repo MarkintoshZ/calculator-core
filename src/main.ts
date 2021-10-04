@@ -1,32 +1,36 @@
-/**
- * Some predefined delay values (in milliseconds).
- */
-export enum Delays {
-  Short = 500,
-  Medium = 2000,
-  Long = 5000,
+import { lexer, parser, interpreter } from './grammar';
+
+export const parse = (str: string) => {
+  const lexResult = lexer.tokenize(str);
+  parser.input = lexResult.tokens;
+  const cst = parser.lines();
+  const result = interpreter.lines(cst);
+
+  return {
+    result: result,
+    cst: cst,
+    lexErrors: lexResult.errors,
+    parseErrors: parser.errors
+  }
 }
 
-/**
- * Returns a Promise<string> that resolves after a given time.
- *
- * @param {string} name - A name.
- * @param {number=} [delay=Delays.Medium] - A number of milliseconds to delay resolution of the Promise.
- * @returns {Promise<string>}
- */
-function delayedHello(
-  name: string,
-  delay: number = Delays.Medium,
-): Promise<string> {
-  return new Promise((resolve: (value?: string) => void) =>
-    setTimeout(() => resolve(`Hello, ${name}`), delay),
-  );
-}
+import * as fs from "fs";
+import { createSyntaxDiagramsCode } from "chevrotain";
 
-// Below are examples of using ESLint errors suppression
-// Here it is suppressing a missing return type definition for the greeter function.
+import { inspect } from 'util';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export async function greeter(name: string) {
-  return await delayedHello(name, Delays.Long);
-}
+const input = 
+`2 ^ 3 ^ 4` 
+console.log(input);
+const result = parse(input);
+console.log(result.result);
+console.log(inspect(result?.cst?.children?.line, false, 2, true));
+
+// extract the serialized grammar.
+const serializedGrammar = parser.getSerializedGastProductions()
+
+// create the HTML Text
+const htmlText = createSyntaxDiagramsCode(serializedGrammar)
+
+// Write the HTML file to disk
+fs.writeFileSync("generated_diagrams.html", htmlText)

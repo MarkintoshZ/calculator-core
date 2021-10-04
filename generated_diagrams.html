@@ -1,0 +1,411 @@
+
+<!-- This is a generated file -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body {
+    background-color: hsl(30, 20%, 95%)
+  }
+</style>
+
+
+<link rel='stylesheet' href='https://unpkg.com/chevrotain@9.0.2/diagrams/diagrams.css'>
+
+<script src='https://unpkg.com/chevrotain@9.0.2/diagrams/vendor/railroad-diagrams.js'></script>
+<script src='https://unpkg.com/chevrotain@9.0.2/diagrams/src/diagrams_builder.js'></script>
+<script src='https://unpkg.com/chevrotain@9.0.2/diagrams/src/diagrams_behavior.js'></script>
+<script src='https://unpkg.com/chevrotain@9.0.2/diagrams/src/main.js'></script>
+
+<div id="diagrams" align="center"></div>    
+
+<script>
+    window.serializedGrammar = [
+  {
+    "type": "Rule",
+    "name": "lines",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "RepetitionWithSeparator",
+        "idx": 0,
+        "separator": {
+          "type": "Terminal",
+          "name": "NewLine",
+          "label": "NewLine",
+          "idx": 1,
+          "pattern": "\\n|\\r\\n?"
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "line",
+            "idx": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "line",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternation",
+            "idx": 0,
+            "definition": [
+              {
+                "type": "Alternative",
+                "definition": [
+                  {
+                    "type": "NonTerminal",
+                    "name": "assignOperation",
+                    "idx": 0
+                  }
+                ]
+              },
+              {
+                "type": "Alternative",
+                "definition": [
+                  {
+                    "type": "NonTerminal",
+                    "name": "expression",
+                    "idx": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "assignOperation",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Variable",
+        "label": "Variable",
+        "idx": 0,
+        "pattern": "[a-zA-Z]\\w*"
+      },
+      {
+        "type": "Terminal",
+        "name": "AssignOperator",
+        "label": "AssignOperator",
+        "idx": 0,
+        "pattern": "="
+      },
+      {
+        "type": "NonTerminal",
+        "name": "expression",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "expression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "additionExpression",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "additionExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "multiplicationExpression",
+        "idx": 0,
+        "label": "lhs"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "AdditionOperator",
+            "label": "AdditionOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "multiplicationExpression",
+            "idx": 2,
+            "label": "rhs"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "multiplicationExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "negationExpression",
+        "idx": 0,
+        "label": "lhs"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "MultiplicationOperator",
+            "label": "MultiplicationOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "negationExpression",
+            "idx": 2,
+            "label": "rhs"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "negationExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "Minus",
+            "label": "Minus",
+            "idx": 0,
+            "terminalLabel": "negation",
+            "pattern": "-"
+          }
+        ]
+      },
+      {
+        "type": "NonTerminal",
+        "name": "powerExpression",
+        "idx": 0,
+        "label": "value"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "negationAtomicExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "Minus",
+            "label": "Minus",
+            "idx": 0,
+            "terminalLabel": "negation",
+            "pattern": "-"
+          }
+        ]
+      },
+      {
+        "type": "NonTerminal",
+        "name": "atomicExpression",
+        "idx": 0,
+        "label": "value"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "powerExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "atomicExpression",
+        "idx": 0,
+        "label": "base"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "PowerOperator",
+            "label": "PowerOperator",
+            "idx": 0,
+            "pattern": "\\^"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "negationAtomicExpression",
+            "idx": 2,
+            "label": "exponent"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "atomicExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "parenthesisExpression",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "NumberLiteral",
+                "label": "NumberLiteral",
+                "idx": 0,
+                "pattern": "[1-9]\\d*"
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "powerFunction",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Alternative",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "Variable",
+                "label": "Variable",
+                "idx": 0,
+                "pattern": "[a-zA-Z]\\w*"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "parenthesisExpression",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "LParen",
+        "label": "LParen",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "NonTerminal",
+        "name": "expression",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "RParen",
+        "label": "RParen",
+        "idx": 0,
+        "pattern": "\\)"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "powerFunction",
+    "orgText": "",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "PowerFunc",
+        "label": "PowerFunc",
+        "idx": 0,
+        "pattern": "power"
+      },
+      {
+        "type": "Terminal",
+        "name": "LParen",
+        "label": "LParen",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "NonTerminal",
+        "name": "expression",
+        "idx": 0,
+        "label": "base"
+      },
+      {
+        "type": "Terminal",
+        "name": "Comma",
+        "label": "Comma",
+        "idx": 0,
+        "pattern": ","
+      },
+      {
+        "type": "NonTerminal",
+        "name": "expression",
+        "idx": 2,
+        "label": "exponent"
+      },
+      {
+        "type": "Terminal",
+        "name": "RParen",
+        "label": "RParen",
+        "idx": 0,
+        "pattern": "\\)"
+      }
+    ]
+  }
+];
+</script>
+
+<script>
+    var diagramsDiv = document.getElementById("diagrams");
+    main.drawDiagramsFromSerializedGrammar(serializedGrammar, diagramsDiv);
+</script>
