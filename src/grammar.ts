@@ -55,7 +55,13 @@ const NumberLiteral = createToken({
   pattern: /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/,
 });
 
-const PowerFunc = createToken({ name: 'PowerFunc', pattern: /power/ });
+const Func = createToken({ name: 'Function', pattern: Lexer.NA });
+const Sqrt = createToken({
+  name: 'PowerSqrt',
+  pattern: /sqrt/,
+  categories: Func,
+});
+
 const Comma = createToken({ name: 'Comma', pattern: /,/ });
 
 const allTokens = [
@@ -75,15 +81,11 @@ const allTokens = [
   AdditionOperator,
   MultiplicationOperator,
   PowerOperator,
-
-  // functions
-  PowerFunc,
-
-  // identifier
-  Variable,
-
-  // others
   Comma,
+
+  Sqrt,
+  Func,
+  Variable,
 ];
 
 export const lexer = new Lexer(allTokens);
@@ -174,7 +176,7 @@ class CalculatorParser extends CstParser {
       // in the "lowest" leaf in the expression ParseTree.
       { ALT: () => this.SUBRULE(this.parenthesisExpression) },
       { ALT: () => this.CONSUME(NumberLiteral) },
-      { ALT: () => this.SUBRULE(this.powerFunction) },
+      { ALT: () => this.SUBRULE(this.function) },
       { ALT: () => this.CONSUME(Variable) },
     ]),
   );
@@ -185,13 +187,14 @@ class CalculatorParser extends CstParser {
     this.CONSUME(RParen);
   });
 
-  private powerFunction = this.RULE('powerFunction', () => {
-    this.CONSUME(PowerFunc);
-    this.CONSUME(LParen);
-    this.SUBRULE(this.atomicExpression, { LABEL: 'base' });
-    this.CONSUME(Comma);
-    this.SUBRULE2(this.atomicExpression, { LABEL: 'exponent' });
-    this.CONSUME(RParen);
+  private function = this.RULE('function', () => {
+    this.CONSUME(Func, { LABEL: 'function' });
+    this.CONSUME2(LParen);
+    this.MANY_SEP({
+      SEP: Comma,
+      DEF: () => this.SUBRULE(this.additionExpression, { LABEL: 'parameters' }),
+    });
+    this.CONSUME3(RParen);
   });
 }
 
@@ -202,34 +205,90 @@ export const parser = new CalculatorParser();
 // ----------------- Interpreter -----------------
 const BaseCstVisitor = parser.getBaseCstVisitorConstructor();
 
+/**
+ * Interprete and calculate the results from the CST
+ *
+ * @example
+ * Set default variables in for the interpreter
+ * ```ts
+ * const default_variables = new Map(object.entries({
+ *   PI: new BigNumber(3.14),
+ * }));
+ * const interpreter = new CalculatorInterpreter(default_variables);
+ * input = lexer.tokenize('a = 2 * PI
+ * b = a + 10');
+ * let res;
+ * try {
+ *   res = interpreter.lines(input);
+ * } catch (e) {
+ *   console.err(e);
+ * }
+ * // res: [ new BigNumber(6.28), new BigNumber(16.28) ]
+ *
+ * @example
+ * Parse line by line
+ * ```ts
+ * let stack = new Map<String, BigNumber>();
+ * let varaible, value;
+ *
+ * const interpreter = new CalculatorInterpreter();
+ * try {
+ *   const tokens = lexer.tokenize('a = 1 + 1')
+ *   const cts = parser.parse(tokens)
+ *   [ variable, value ] = interpreter.line(cst, stack);
+ * } catch (e) {
+ *   console.err(e);
+ * }
+ *
+ * if (variable) stack[variable] = value;
+ *
+ * try {
+ *   const tokens = lexer.tokenize('a * 5')
+ *   const cts = parser.parse(tokens)
+ *   [ variable, value ] = interpreter.line(cst, stack);
+ * } catch (e) {
+ *   console.err(e);
+ * }
+ * // value: new BigNumber(10)
+ */
 class CalculatorInterpreter extends BaseCstVisitor {
-  private stack = new Map();
+  private stack: Map<string, BigNumber> = new Map();
 
   constructor() {
     super();
     this.validateVisitor();
   }
 
-  lines(ctx) {
+  /**
+   * Interprete and calculate the results from the CST with one or more lines
+   * @param stack - a stack containing all the variables
+   */
+  lines(ctx, stack: Map<string, BigNumber> = new Map()) {
+    this.stack = stack;
     if (ctx?.children?.line)
-      return ctx.children.line.map((line) => this.visit(line));
+      return ctx.children.line.map((line) => {
+        const { variable, value } = this.visit(line, this.stack);
+        this.stack[variable] = value;
+        return { variable, value };
+      });
   }
 
-  line(ctx) {
+  line(ctx, stack: Map<string, BigNumber> = new Map()) {
+    if (stack) this.stack = stack;
     if (ctx.additionExpression) {
-      return this.visit(ctx.additionExpression);
+      return { variable: null, value: this.visit(ctx.additionExpression) };
     } else if (ctx.assignOperation) {
       return this.visit(ctx.assignOperation);
     } else {
-      return null;
+      return { variable: null, value: null };
     }
   }
 
   assignOperation(ctx) {
-    const variable_name = ctx.Variable[0].image;
-    const result = this.visit(ctx.additionExpression);
-    this.stack[variable_name] = result;
-    return result;
+    const variable = ctx.Variable[0].image;
+    const value = this.visit(ctx.additionExpression);
+    // delay assigning the value to the variable name to `line`
+    return { variable, value };
   }
 
   additionExpression(ctx) {
@@ -239,8 +298,8 @@ class CalculatorInterpreter extends BaseCstVisitor {
     if (ctx.rhs) {
       ctx.rhs.forEach((rhsOperand, idx) => {
         // there will be one operator for each rhs operand
-        let rhsValue = this.visit(rhsOperand);
-        let operator = ctx.AdditionOperator[idx];
+        const rhsValue = this.visit(rhsOperand);
+        const operator = ctx.AdditionOperator[idx];
 
         if (tokenMatcher(operator, Plus)) {
           result = result.plus(rhsValue);
@@ -259,8 +318,8 @@ class CalculatorInterpreter extends BaseCstVisitor {
     if (ctx.rhs) {
       ctx.rhs.forEach((rhsOperand, idx) => {
         // there will be one operator for each rhs operand
-        let rhsValue = this.visit(rhsOperand);
-        let operator = ctx.MultiplicationOperator[idx];
+        const rhsValue = this.visit(rhsOperand);
+        const operator = ctx.MultiplicationOperator[idx];
 
         if (tokenMatcher(operator, Multi)) {
           result = result.multipliedBy(rhsValue);
@@ -312,8 +371,8 @@ class CalculatorInterpreter extends BaseCstVisitor {
     } else if (ctx.NumberLiteral) {
       // If a key exists on the ctx, at least one element is guaranteed
       return new BigNumber(ctx.NumberLiteral[0].image);
-    } else if (ctx.powerFunction) {
-      return this.visit(ctx.powerFunction);
+    } else if (ctx.function) {
+      return this.visit(ctx.function);
     } else if (ctx.Variable) {
       return this.stack[ctx.Variable[0].image];
     }
@@ -325,10 +384,13 @@ class CalculatorInterpreter extends BaseCstVisitor {
     return this.visit(ctx.additionExpression);
   }
 
-  powerFunction(ctx) {
-    const base = this.visit(ctx.base);
-    const exponent = this.visit(ctx.exponent);
-    return Math.pow(base, exponent);
+  function(ctx) {
+    const parameters = ctx.parameters.map((p) => this.visit(p));
+    if (tokenMatcher(ctx.function[0], Sqrt) && parameters.length == 1) {
+      const n = Math.sqrt(parameters[0]);
+      return new BigNumber(n);
+    }
+    return new BigNumber(null);
   }
 }
 

@@ -1,14 +1,36 @@
-import { BigNumber } from 'bignumber.js'
-import { parse } from '../src/main';
+import { BigNumber } from 'bignumber.js';
+import { ILexingError, IRecognitionException } from 'chevrotain';
+import { lexer, parser, interpreter } from '../src/grammar';
+
+interface ParsedResult {
+  result: BigNumber[];
+  cst: unknown;
+  lexErrors: ILexingError[];
+  parseErrors: IRecognitionException[];
+}
+
+const parse = (str: string): ParsedResult => {
+  const lexResult = lexer.tokenize(str);
+  parser.input = lexResult.tokens;
+  const cst = parser.lines();
+  const result = interpreter.lines(cst);
+
+  return {
+    result: result.map((v) => v.value),
+    cst: cst,
+    lexErrors: lexResult.errors,
+    parseErrors: parser.errors,
+  };
+};
 
 describe('parsing literals', () => {
   it('parse integer', () => {
-    let { result } = parse('69');
+    const { result } = parse('69');
     expect(result).toStrictEqual([new BigNumber(69)]);
   });
 
   it('parse negative integer', () => {
-    let { result } = parse('-69');
+    const { result } = parse('-69');
     expect(result).toStrictEqual([new BigNumber(-69)]);
   });
 
@@ -109,7 +131,7 @@ describe('negation expression', () => {
   it('single negative integer', () => {
     const { result } = parse('-3102');
     expect(result).toStrictEqual([new BigNumber(-3102)]);
-  })
+  });
 });
 
 describe('power expression', () => {
@@ -151,14 +173,26 @@ describe('power expression', () => {
 
 describe('order of precedence', () => {
   it('testcase 1', () => {
-    const input = '4 + 5 * 4^-1^(1/2)';
-    const { result } = parse(input);
+    const { result } = parse('4 + 5 * 4^-1^(1/2)');
     expect(result).toStrictEqual([new BigNumber(6.5)]);
   });
 
   it('testcase 2', () => {
-    const input = '4 + 5 * 4^-1^(1/2)';
+    const { result } = parse('5 ^ -2 * 8');
+    expect(result).toStrictEqual([new BigNumber(0.32)]);
+  });
+});
+
+describe('variables', () => {
+  it('testcase 1', () => {
+    const input = `a = 10 * -2
+       b = (a / 20)^2
+       c = 90 - a * b`;
     const { result } = parse(input);
-    expect(result).toStrictEqual([new BigNumber(6.5)]);
+    expect(result).toStrictEqual([
+      new BigNumber(-20),
+      new BigNumber(1),
+      new BigNumber(110),
+    ]);
   });
 });

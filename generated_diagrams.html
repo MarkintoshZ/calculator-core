@@ -296,7 +296,7 @@
             "definition": [
               {
                 "type": "NonTerminal",
-                "name": "powerFunction",
+                "name": "function",
                 "idx": 0
               }
             ]
@@ -345,47 +345,48 @@
   },
   {
     "type": "Rule",
-    "name": "powerFunction",
+    "name": "function",
     "orgText": "",
     "definition": [
       {
         "type": "Terminal",
-        "name": "PowerFunc",
-        "label": "PowerFunc",
+        "name": "Function",
+        "label": "Function",
         "idx": 0,
-        "pattern": "power"
+        "terminalLabel": "function",
+        "pattern": "NOT_APPLICABLE"
       },
       {
         "type": "Terminal",
         "name": "LParen",
         "label": "LParen",
-        "idx": 0,
+        "idx": 2,
         "pattern": "\\("
       },
       {
-        "type": "NonTerminal",
-        "name": "atomicExpression",
+        "type": "RepetitionWithSeparator",
         "idx": 0,
-        "label": "base"
-      },
-      {
-        "type": "Terminal",
-        "name": "Comma",
-        "label": "Comma",
-        "idx": 0,
-        "pattern": ","
-      },
-      {
-        "type": "NonTerminal",
-        "name": "atomicExpression",
-        "idx": 2,
-        "label": "exponent"
+        "separator": {
+          "type": "Terminal",
+          "name": "Comma",
+          "label": "Comma",
+          "idx": 1,
+          "pattern": ","
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "additionExpression",
+            "idx": 0,
+            "label": "parameters"
+          }
+        ]
       },
       {
         "type": "Terminal",
         "name": "RParen",
         "label": "RParen",
-        "idx": 0,
+        "idx": 3,
         "pattern": "\\)"
       }
     ]
