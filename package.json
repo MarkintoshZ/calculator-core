@@ -27,6 +27,8 @@
     "test:watch": "jest --watch"
   },
   "author": "Mark Zhang",
+  "module": "build/src/index.js",
+  "types": "build/src/index.d.ts",
   "dependencies": {
     "bignumber.js": "^9.0.1",
     "chevrotain": "^9.0.2",
