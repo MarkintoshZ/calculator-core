@@ -374,7 +374,10 @@ class CalculatorInterpreter extends BaseCstVisitor {
     } else if (ctx.function) {
       return this.visit(ctx.function);
     } else if (ctx.Variable) {
-      return this.stack[ctx.Variable[0].image];
+      const varName = ctx.Variable[0].image;
+      const value = this.stack[varName];
+      if (!value) throw Error(`Use of undefined variable "${varName}"`);
+      return value;
     }
   }
 

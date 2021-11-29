@@ -255,7 +255,11 @@ class CalculatorInterpreter extends BaseCstVisitor {
             return this.visit(ctx.function);
         }
         else if (ctx.Variable) {
-            return this.stack[ctx.Variable[0].image];
+            const varName = ctx.Variable[0].image;
+            const value = this.stack[varName];
+            if (!value)
+                throw Error(`Use of undefined variable "${varName}"`);
+            return value;
         }
     }
     parenthesisExpression(ctx) {
