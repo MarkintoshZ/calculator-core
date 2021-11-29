@@ -268,13 +268,13 @@ class CalculatorInterpreter extends BaseCstVisitor {
     if (ctx?.children?.line)
       return ctx.children.line.map((line) => {
         const { variable, value } = this.visit(line, this.stack);
-        this.stack[variable] = value;
+        this.stack.set(variable, value);
         return { variable, value };
       });
   }
 
   line(ctx, stack: Map<string, BigNumber> = new Map()) {
-    if (stack) this.stack = stack;
+    this.stack = stack;
     if (ctx.additionExpression) {
       return { variable: null, value: this.visit(ctx.additionExpression) };
     } else if (ctx.assignOperation) {
@@ -375,7 +375,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
       return this.visit(ctx.function);
     } else if (ctx.Variable) {
       const varName = ctx.Variable[0].image;
-      const value = this.stack[varName];
+      const value = this.stack.get(varName);
       if (!value) throw Error(`Use of undefined variable "${varName}"`);
       return value;
     }

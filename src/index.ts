@@ -5,7 +5,7 @@ export { lexer, parser, interpreter } from './grammar';
 // The following are for testing purposes only
 // import { ILexingError, IRecognitionException } from 'chevrotain';
 // import { lexer, parser, interpreter } from './grammar';
-//
+// 
 // interface ParsedResult {
 //   result: BigNumber[];
 //   cst: any;
@@ -33,7 +33,7 @@ export { lexer, parser, interpreter } from './grammar';
 // import { inspect } from 'util';
 // import BigNumber from 'bignumber.js';
 // 
-// const input = `a * 2`;
+// const input = `1 + 2`;
 // console.log(input);
 // const result = parse(input);
 // console.log(inspect(result), false, 2, true);

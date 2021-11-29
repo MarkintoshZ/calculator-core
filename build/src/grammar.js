@@ -166,13 +166,12 @@ class CalculatorInterpreter extends BaseCstVisitor {
         if ((_a = ctx === null || ctx === void 0 ? void 0 : ctx.children) === null || _a === void 0 ? void 0 : _a.line)
             return ctx.children.line.map((line) => {
                 const { variable, value } = this.visit(line, this.stack);
-                this.stack[variable] = value;
+                this.stack.set(variable, value);
                 return { variable, value };
             });
     }
     line(ctx, stack = new Map()) {
-        if (stack)
-            this.stack = stack;
+        this.stack = stack;
         if (ctx.additionExpression) {
             return { variable: null, value: this.visit(ctx.additionExpression) };
         }
@@ -256,7 +255,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
         }
         else if (ctx.Variable) {
             const varName = ctx.Variable[0].image;
-            const value = this.stack[varName];
+            const value = this.stack.get(varName);
             if (!value)
                 throw Error(`Use of undefined variable "${varName}"`);
             return value;
