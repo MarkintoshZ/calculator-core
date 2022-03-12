@@ -13,7 +13,7 @@ const WhiteSpace = (0, chevrotain_1.createToken)({
     group: chevrotain_1.Lexer.SKIPPED,
 });
 const AssignOperator = (0, chevrotain_1.createToken)({ name: 'AssignOperator', pattern: /=/ });
-const Variable = (0, chevrotain_1.createToken)({ name: 'Variable', pattern: /[a-zA-Z]\w*/ });
+const Identifier = (0, chevrotain_1.createToken)({ name: 'Identifier', pattern: /[a-zA-Z]\w*/ });
 const AdditionOperator = (0, chevrotain_1.createToken)({
     name: 'AdditionOperator',
     pattern: chevrotain_1.Lexer.NA,
@@ -49,12 +49,6 @@ const NumberLiteral = (0, chevrotain_1.createToken)({
     name: 'NumberLiteral',
     pattern: /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/,
 });
-const Func = (0, chevrotain_1.createToken)({ name: 'Function', pattern: chevrotain_1.Lexer.NA });
-const Sqrt = (0, chevrotain_1.createToken)({
-    name: 'PowerSqrt',
-    pattern: /sqrt/,
-    categories: Func,
-});
 const Comma = (0, chevrotain_1.createToken)({ name: 'Comma', pattern: /,/ });
 const allTokens = [
     NewLine,
@@ -71,9 +65,7 @@ const allTokens = [
     MultiplicationOperator,
     PowerOperator,
     Comma,
-    Sqrt,
-    Func,
-    Variable,
+    Identifier,
 ];
 exports.lexer = new chevrotain_1.Lexer(allTokens);
 class CalculatorParser extends chevrotain_1.CstParser {
@@ -96,7 +88,7 @@ class CalculatorParser extends chevrotain_1.CstParser {
             });
         });
         this.assignOperation = this.RULE('assignOperation', () => {
-            this.CONSUME(Variable);
+            this.CONSUME(Identifier);
             this.CONSUME(AssignOperator);
             this.SUBRULE(this.additionExpression);
         });
@@ -133,7 +125,7 @@ class CalculatorParser extends chevrotain_1.CstParser {
             { ALT: () => this.SUBRULE(this.parenthesisExpression) },
             { ALT: () => this.CONSUME(NumberLiteral) },
             { ALT: () => this.SUBRULE(this.function) },
-            { ALT: () => this.CONSUME(Variable) },
+            { ALT: () => this.CONSUME(Identifier) },
         ]));
         this.parenthesisExpression = this.RULE('parenthesisExpression', () => {
             this.CONSUME(LParen);
@@ -141,7 +133,7 @@ class CalculatorParser extends chevrotain_1.CstParser {
             this.CONSUME(RParen);
         });
         this.function = this.RULE('function', () => {
-            this.CONSUME(Func, { LABEL: 'function' });
+            this.CONSUME(Identifier, { LABEL: 'function' });
             this.CONSUME2(LParen);
             this.MANY_SEP({
                 SEP: Comma,
@@ -157,21 +149,21 @@ const BaseCstVisitor = exports.parser.getBaseCstVisitorConstructor();
 class CalculatorInterpreter extends BaseCstVisitor {
     constructor() {
         super();
-        this.stack = new Map();
+        this.variables = new Map();
         this.validateVisitor();
     }
     lines(ctx, stack = new Map()) {
         var _a;
-        this.stack = stack;
+        this.variables = stack;
         if ((_a = ctx === null || ctx === void 0 ? void 0 : ctx.children) === null || _a === void 0 ? void 0 : _a.line)
             return ctx.children.line.map((line) => {
-                const { variable, value } = this.visit(line, this.stack);
-                this.stack.set(variable, value);
+                const { variable, value } = this.visit(line, this.variables);
+                this.variables.set(variable, value);
                 return { variable, value };
             });
     }
     line(ctx, stack = new Map()) {
-        this.stack = stack;
+        this.variables = stack;
         if (ctx.additionExpression) {
             return { variable: null, value: this.visit(ctx.additionExpression) };
         }
@@ -183,7 +175,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
         }
     }
     assignOperation(ctx) {
-        const variable = ctx.Variable[0].image;
+        const variable = ctx.Identifier[0].image;
         const value = this.visit(ctx.additionExpression);
         return { variable, value };
     }
@@ -253,9 +245,9 @@ class CalculatorInterpreter extends BaseCstVisitor {
         else if (ctx.function) {
             return this.visit(ctx.function);
         }
-        else if (ctx.Variable) {
-            const varName = ctx.Variable[0].image;
-            const value = this.stack.get(varName);
+        else if (ctx.Identifier) {
+            const varName = ctx.Identifier[0].image;
+            const value = this.variables.get(varName);
             if (!value)
                 throw Error(`Use of undefined variable "${varName}"`);
             return value;
@@ -266,7 +258,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
     }
     function(ctx) {
         const parameters = ctx.parameters.map((p) => this.visit(p));
-        if ((0, chevrotain_1.tokenMatcher)(ctx.function[0], Sqrt) && parameters.length == 1) {
+        if (ctx.function[0].image === "sqrt" && parameters.length == 1) {
             const n = Math.sqrt(parameters[0]);
             return new bignumber_js_1.default(n);
         }

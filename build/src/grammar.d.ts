@@ -18,7 +18,7 @@ declare class CalculatorParser extends CstParser {
 export declare const parser: CalculatorParser;
 declare const BaseCstVisitor: new (...args: any[]) => import("chevrotain").ICstVisitor<any, any>;
 declare class CalculatorInterpreter extends BaseCstVisitor {
-    private stack;
+    private variables;
     constructor();
     lines(ctx: any, stack?: Map<string, BigNumber>): any;
     line(ctx: any, stack?: Map<string, BigNumber>): any;

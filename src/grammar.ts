@@ -14,7 +14,7 @@ const WhiteSpace = createToken({
 });
 
 const AssignOperator = createToken({ name: 'AssignOperator', pattern: /=/ });
-const Variable = createToken({ name: 'Variable', pattern: /[a-zA-Z]\w*/ });
+const Identifier = createToken({ name: 'Identifier', pattern: /[a-zA-Z]\w*/ });
 
 const AdditionOperator = createToken({
   name: 'AdditionOperator',
@@ -55,13 +55,6 @@ const NumberLiteral = createToken({
   pattern: /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/,
 });
 
-const Func = createToken({ name: 'Function', pattern: Lexer.NA });
-const Sqrt = createToken({
-  name: 'PowerSqrt',
-  pattern: /sqrt/,
-  categories: Func,
-});
-
 const Comma = createToken({ name: 'Comma', pattern: /,/ });
 
 const allTokens = [
@@ -82,10 +75,7 @@ const allTokens = [
   MultiplicationOperator,
   PowerOperator,
   Comma,
-
-  Sqrt,
-  Func,
-  Variable,
+  Identifier,
 ];
 
 export const lexer = new Lexer(allTokens);
@@ -118,7 +108,7 @@ class CalculatorParser extends CstParser {
   });
 
   private assignOperation = this.RULE('assignOperation', () => {
-    this.CONSUME(Variable);
+    this.CONSUME(Identifier);
     this.CONSUME(AssignOperator);
     this.SUBRULE(this.additionExpression);
   });
@@ -177,7 +167,7 @@ class CalculatorParser extends CstParser {
       { ALT: () => this.SUBRULE(this.parenthesisExpression) },
       { ALT: () => this.CONSUME(NumberLiteral) },
       { ALT: () => this.SUBRULE(this.function) },
-      { ALT: () => this.CONSUME(Variable) },
+      { ALT: () => this.CONSUME(Identifier) },
     ]),
   );
 
@@ -188,7 +178,7 @@ class CalculatorParser extends CstParser {
   });
 
   private function = this.RULE('function', () => {
-    this.CONSUME(Func, { LABEL: 'function' });
+    this.CONSUME(Identifier, { LABEL: 'function' });
     this.CONSUME2(LParen);
     this.MANY_SEP({
       SEP: Comma,
@@ -252,7 +242,8 @@ const BaseCstVisitor = parser.getBaseCstVisitorConstructor();
  * // value: new BigNumber(10)
  */
 class CalculatorInterpreter extends BaseCstVisitor {
-  private stack: Map<string, BigNumber> = new Map();
+  private variables: Map<string, BigNumber> = new Map();
+  // private functions: Map<string, (args: BigNumber[]) => BigNumber | null> = new Map();
 
   constructor() {
     super();
@@ -264,17 +255,17 @@ class CalculatorInterpreter extends BaseCstVisitor {
    * @param stack - a stack containing all the variables
    */
   lines(ctx, stack: Map<string, BigNumber> = new Map()) {
-    this.stack = stack;
+    this.variables = stack;
     if (ctx?.children?.line)
       return ctx.children.line.map((line) => {
-        const { variable, value } = this.visit(line, this.stack);
-        this.stack.set(variable, value);
+        const { variable, value } = this.visit(line, this.variables);
+        this.variables.set(variable, value);
         return { variable, value };
       });
   }
 
   line(ctx, stack: Map<string, BigNumber> = new Map()) {
-    this.stack = stack;
+    this.variables = stack;
     if (ctx.additionExpression) {
       return { variable: null, value: this.visit(ctx.additionExpression) };
     } else if (ctx.assignOperation) {
@@ -285,7 +276,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
   }
 
   assignOperation(ctx) {
-    const variable = ctx.Variable[0].image;
+    const variable = ctx.Identifier[0].image;
     const value = this.visit(ctx.additionExpression);
     // delay assigning the value to the variable name to `line`
     return { variable, value };
@@ -373,9 +364,9 @@ class CalculatorInterpreter extends BaseCstVisitor {
       return new BigNumber(ctx.NumberLiteral[0].image);
     } else if (ctx.function) {
       return this.visit(ctx.function);
-    } else if (ctx.Variable) {
-      const varName = ctx.Variable[0].image;
-      const value = this.stack.get(varName);
+    } else if (ctx.Identifier) {
+      const varName = ctx.Identifier[0].image;
+      const value = this.variables.get(varName);
       if (!value) throw Error(`Use of undefined variable "${varName}"`);
       return value;
     }
@@ -389,7 +380,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
 
   function(ctx) {
     const parameters = ctx.parameters.map((p) => this.visit(p));
-    if (tokenMatcher(ctx.function[0], Sqrt) && parameters.length == 1) {
+    if (ctx.function[0].image === "sqrt" && parameters.length == 1) {
       const n = Math.sqrt(parameters[0]);
       return new BigNumber(n);
     }

@@ -196,3 +196,25 @@ describe('variables', () => {
     ]);
   });
 });
+
+describe('functions', () => {
+  it('sqrt evaulation', () => {
+    const { result } = parse('sqrt(4)');
+    expect(result).toStrictEqual([new BigNumber(2)]);
+  });
+
+  it('variables definiting override function definition', () => {
+    const input = `sqrt = sqrt(9)
+      sqrt ^ 2`;
+    const { result } = parse(input);
+    expect(result).toStrictEqual([
+      new BigNumber(3),
+      new BigNumber(9),
+    ]);
+  });
+
+  it('undefined function return NaN', () => {
+    const { result } = parse('does_not_exist(4)');
+    expect(result).toStrictEqual([new BigNumber(NaN)]);
+  });
+});
