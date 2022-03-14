@@ -1,0 +1,16 @@
+export declare const NewLine: import("chevrotain").TokenType;
+export declare const WhiteSpace: import("chevrotain").TokenType;
+export declare const AssignOperator: import("chevrotain").TokenType;
+export declare const Identifier: import("chevrotain").TokenType;
+export declare const AdditionOperator: import("chevrotain").TokenType;
+export declare const Plus: import("chevrotain").TokenType;
+export declare const Minus: import("chevrotain").TokenType;
+export declare const MultiplicationOperator: import("chevrotain").TokenType;
+export declare const Multi: import("chevrotain").TokenType;
+export declare const Div: import("chevrotain").TokenType;
+export declare const PowerOperator: import("chevrotain").TokenType;
+export declare const LParen: import("chevrotain").TokenType;
+export declare const RParen: import("chevrotain").TokenType;
+export declare const NumberLiteral: import("chevrotain").TokenType;
+export declare const Comma: import("chevrotain").TokenType;
+export declare const allTokens: import("chevrotain").TokenType[];

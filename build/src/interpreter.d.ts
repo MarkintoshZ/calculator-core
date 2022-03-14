@@ -1,21 +1,4 @@
 import BigNumber from 'bignumber.js';
-import { Lexer, CstParser } from 'chevrotain';
-export declare const lexer: Lexer;
-declare class CalculatorParser extends CstParser {
-    constructor();
-    lines: (idxInCallingRule?: number, ...args: any[]) => import("chevrotain").CstNode;
-    private line;
-    private assignOperation;
-    private additionExpression;
-    private multiplicationExpression;
-    private negationExpression;
-    private negationAtomicExpression;
-    private powerExpression;
-    private atomicExpression;
-    private parenthesisExpression;
-    private function;
-}
-export declare const parser: CalculatorParser;
 declare const BaseCstVisitor: new (...args: any[]) => import("chevrotain").ICstVisitor<any, any>;
 declare class CalculatorInterpreter extends BaseCstVisitor {
     private variables;

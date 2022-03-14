@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js';
 import { ILexingError, IRecognitionException } from 'chevrotain';
-import { lexer, parser, interpreter } from '../src/grammar';
+import { lexer, parser, interpreter } from '../src';
 
 interface ParsedResult {
   result: BigNumber[];
@@ -16,7 +16,7 @@ const parse = (str: string): ParsedResult => {
   const result = interpreter.lines(cst);
 
   return {
-    result: result.map((v) => v.value),
+    result: result?.map((v) => v.value),
     cst: cst,
     lexErrors: lexResult.errors,
     parseErrors: parser.errors,
@@ -218,3 +218,4 @@ describe('functions', () => {
     expect(result).toStrictEqual([new BigNumber(NaN)]);
   });
 });
+
