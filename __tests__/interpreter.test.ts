@@ -1,6 +1,7 @@
 import { BigNumber } from 'bignumber.js';
 import { ILexingError, IRecognitionException } from 'chevrotain';
 import { lexer, parser, interpreter } from '../src';
+import { StandardFunctions } from '../src/functions';
 
 interface ParsedResult {
   result: BigNumber[];
@@ -8,6 +9,8 @@ interface ParsedResult {
   lexErrors: ILexingError[];
   parseErrors: IRecognitionException[];
 }
+
+interpreter.funcs = StandardFunctions;
 
 const parse = (str: string): ParsedResult => {
   const lexResult = lexer.tokenize(str);
@@ -201,6 +204,14 @@ describe('functions', () => {
   it('sqrt evaulation', () => {
     const { result } = parse('sqrt(4)');
     expect(result).toStrictEqual([new BigNumber(2)]);
+  });
+
+  it('max evaulation', () => {
+    const { result: result1 } = parse('max(4, 5, -3)');
+    expect(result1).toStrictEqual([new BigNumber(5)]);
+
+    const { result: result2 } = parse('max(4, 5, ln(-1))');
+    expect(result2).toStrictEqual([new BigNumber(NaN)]);
   });
 
   it('variables definiting override function definition', () => {

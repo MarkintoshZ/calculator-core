@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.interpreter = void 0;
+exports.interpreter = exports.CalculatorInterpreter = void 0;
 const bignumber_js_1 = require("bignumber.js");
 const chevrotain_1 = require("chevrotain");
 const tokens_1 = require("./tokens");
@@ -9,7 +9,6 @@ const BaseCstVisitor = parser_1.parser.getBaseCstVisitorConstructor();
 class CalculatorInterpreter extends BaseCstVisitor {
     constructor() {
         super();
-        this.variables = new Map();
         this.validateVisitor();
     }
     lines(ctx, stack = new Map()) {
@@ -31,7 +30,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
             return this.visit(ctx.assignOperation);
         }
         else {
-            return { variable: null, value: null };
+            return { variable: null, value: new bignumber_js_1.default(NaN) };
         }
     }
     assignOperation(ctx) {
@@ -96,6 +95,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
         return base;
     }
     atomicExpression(ctx) {
+        var _a;
         if (ctx.parenthesisExpression) {
             return this.visit(ctx.parenthesisExpression);
         }
@@ -107,7 +107,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
         }
         else if (ctx.Identifier) {
             const varName = ctx.Identifier[0].image;
-            const value = this.variables.get(varName);
+            const value = (_a = this.variables.get(varName)) !== null && _a !== void 0 ? _a : this.consts.get(varName);
             if (!value)
                 throw Error(`Use of undefined variable "${varName}"`);
             return value;
@@ -118,12 +118,21 @@ class CalculatorInterpreter extends BaseCstVisitor {
     }
     function(ctx) {
         const parameters = ctx.parameters.map((p) => this.visit(p));
-        if (ctx.function[0].image === 'sqrt' && parameters.length == 1) {
-            const n = Math.sqrt(parameters[0]);
-            return new bignumber_js_1.default(n);
+        const funcName = ctx.function[0].image;
+        const func = this.funcs.get(funcName);
+        if (!func) {
+            console.log(`Function ${funcName} is not defined`);
+            return new bignumber_js_1.default(NaN);
         }
-        return new bignumber_js_1.default(null);
+        try {
+            return func.callback(parameters);
+        }
+        catch (e) {
+            console.log(e);
+            return new bignumber_js_1.default(NaN);
+        }
     }
 }
+exports.CalculatorInterpreter = CalculatorInterpreter;
 exports.interpreter = new CalculatorInterpreter();
 //# sourceMappingURL=interpreter.js.map

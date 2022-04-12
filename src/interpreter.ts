@@ -53,7 +53,7 @@ const BaseCstVisitor = parser.getBaseCstVisitorConstructor();
  * }
  * // value: new BigNumber(10)
  */
-class CalculatorInterpreter extends BaseCstVisitor {
+export class CalculatorInterpreter extends BaseCstVisitor {
   public funcs: Map<string, Func>;
   public consts: Map<string, Const>;
   public variables: Map<string, BigNumber>;
@@ -84,7 +84,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
     } else if (ctx.assignOperation) {
       return this.visit(ctx.assignOperation);
     } else {
-      return { variable: null, value: null };
+      return { variable: null, value: new BigNumber(NaN) };
     }
   }
 
@@ -179,7 +179,7 @@ class CalculatorInterpreter extends BaseCstVisitor {
       return this.visit(ctx.function);
     } else if (ctx.Identifier) {
       const varName = ctx.Identifier[0].image;
-      const value = this.variables.get(varName);
+      const value = this.variables.get(varName) ?? this.consts.get(varName);
       if (!value) throw Error(`Use of undefined variable "${varName}"`);
       return value;
     }
@@ -193,11 +193,18 @@ class CalculatorInterpreter extends BaseCstVisitor {
 
   function(ctx) {
     const parameters = ctx.parameters.map((p) => this.visit(p));
-    if (ctx.function[0].image === 'sqrt' && parameters.length == 1) {
-      const n = Math.sqrt(parameters[0]);
-      return new BigNumber(n);
+    const funcName = ctx.function[0].image;
+    const func = this.funcs.get(funcName)
+    if (!func) {
+      console.log(`Function ${funcName} is not defined`);
+      return new BigNumber(NaN);
     }
-    return new BigNumber(null);
+    try {
+      return func.callback(parameters);
+    } catch(e) {
+      console.log(e);
+      return new BigNumber(NaN);
+    }
   }
 }
 

@@ -1,18 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { IToken, ILexingError } from 'chevrotain';
-export interface Func {
-    name: string;
-    callback: (args: BigNumber[]) => BigNumber | null;
-    docs: string;
-}
-export interface Constant {
-    name: string;
-    value: BigNumber;
-    docs: string;
-}
+import { Func, Const } from './types';
 export interface EngineConfig {
-    functions: Func[];
-    constants: Constant[];
+    functions?: Map<string, Func>;
+    constants?: Map<string, Const>;
 }
 export declare class Engine {
     private _file;
@@ -27,11 +18,11 @@ export declare class Engine {
     get vars(): (string | null)[];
     get tokens(): IToken[][];
     get lexErrors(): ILexingError[][];
-    get results(): (BigNumber | null)[];
+    get results(): BigNumber[];
     get functions(): Map<string, Func>;
-    get constants(): Map<string, Constant>;
-    constructor(config: EngineConfig);
-    reloadWith(config: EngineConfig): void;
+    get constants(): Map<string, Const>;
+    constructor(config?: EngineConfig);
+    reloadWith(config?: EngineConfig): void;
     execute(file: string[]): void;
     private invalidateCaches;
 }

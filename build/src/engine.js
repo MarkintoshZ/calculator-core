@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Engine = void 0;
+const bignumber_js_1 = require("bignumber.js");
 const lexer_1 = require("./lexer");
 const parser_1 = require("./parser");
 const interpreter_1 = require("./interpreter");
@@ -15,28 +16,14 @@ class Engine {
     get results() { return this._results; }
     get functions() { return this._funcs; }
     get constants() { return this._consts; }
-    reloadWith(config) {
-        this._funcs = new Map();
-        for (const func of config.functions) {
-            if (this._funcs.has(func.name)) {
-                throw new Error(`engine config contains duplicated functions of 
-          name ${func.name}`);
-            }
-            else {
-                this._funcs.set(func.name, func);
-            }
-        }
-        this._consts = new Map();
-        for (const constant of config.constants) {
-            if (this._consts.has(constant.name)) {
-                throw new Error(`engine config contains duplicated constants of 
-          name ${constant.name}`);
-            }
-            else {
-                this._consts.set(constant.name, constant);
-            }
-        }
+    reloadWith(config = {
+        functions: new Map(),
+        constants: new Map(),
+    }) {
+        this._funcs = config.functions;
+        this._consts = config.constants;
         this._file = [];
+        this._vars = [];
         this._tokens = [];
         this._lexErrors = [];
         this._parseErrors = [];
@@ -46,25 +33,34 @@ class Engine {
         if (file === this._file && this._tokens.length !== 0)
             return;
         let i = this.invalidateCaches(file);
+        const stack = new Map();
+        for (let j = 0; j < i; j++) {
+            if (this._vars[j]) {
+                stack.set(this._vars[j], this._results[j]);
+            }
+        }
         for (; i < file.length; i++) {
             const line = file[i];
             const { tokens, errors } = lexer_1.lexer.tokenize(line);
             this.tokens.push(tokens);
             this._lexErrors.push(errors);
+            parser_1.parser.input = tokens;
             const cst = parser_1.parser.lines();
             this._parseErrors.push(parser_1.parser.errors);
-            const entries = this._vars
-                .map((name, i) => [name, this._results[i]]);
-            const stack = new Map(entries.filter(v => v[0] !== null));
             try {
+                interpreter_1.interpreter.funcs = this._funcs;
+                interpreter_1.interpreter.consts = this._consts;
                 const { variable, value } = interpreter_1.interpreter.lines(cst, stack)[0];
                 this._vars.push(variable);
                 this._results.push(value);
+                if (variable) {
+                    stack.set(variable, value);
+                }
             }
             catch (e) {
                 console.log(e);
                 this._vars.push(null);
-                this._results.push(null);
+                this._results.push(new bignumber_js_1.default(NaN));
             }
         }
         this._file = file;
@@ -75,12 +71,16 @@ class Engine {
             if (file[i] !== this._file[i]) {
                 this._vars = this._vars.slice(0, i);
                 this._tokens = this._tokens.slice(0, i);
+                this._lexErrors = this._lexErrors.slice(0, i);
+                this._parseErrors = this._parseErrors.slice(0, i);
                 this._results = this._results.slice(0, i);
                 break;
             }
         }
         this._vars = this._vars.slice(0, file.length);
         this._tokens = this._tokens.slice(0, file.length);
+        this._lexErrors = this._lexErrors.slice(0, file.length);
+        this._parseErrors = this._parseErrors.slice(0, file.length);
         this._results = this._results.slice(0, file.length);
         return i;
     }

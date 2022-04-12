@@ -6,8 +6,8 @@ import { interpreter } from './interpreter';
 import { Func, Const } from './types';
 
 export interface EngineConfig {
-  functions?: Func[];
-  constants?: Const[];
+  functions?: Map<string, Func>;
+  constants?: Map<string, Const>;
 }
 
 export class Engine {
@@ -17,7 +17,7 @@ export class Engine {
   private _tokens: IToken[][];
   private _lexErrors: ILexingError[][];
   private _parseErrors: IRecognitionException[][];
-  private _results: (BigNumber | null)[];
+  private _results: BigNumber[];
 
   private _funcs: Map<string, Func>;
   private _consts: Map<string, Const>;
@@ -27,7 +27,7 @@ export class Engine {
   public get vars(): (string | null)[] { return this._vars; }
   public get tokens(): IToken[][] { return this._tokens; }
   public get lexErrors(): ILexingError[][] { return this._lexErrors; }
-  public get results(): (BigNumber | null)[] { return this._results; }
+  public get results(): BigNumber[] { return this._results; }
 
   public get functions(): Map<string, Func> { return this._funcs; }
   public get constants(): Map<string, Const> { return this._consts; }
@@ -38,31 +38,12 @@ export class Engine {
 
   public reloadWith(
     config: EngineConfig = {
-      functions: [],
-      constants: [],
+      functions: new Map(),
+      constants: new Map(),
     },
   ): void {
-    // verify config's validity
-    // constant names and function names must be unique to themselves
-    this._funcs = new Map();
-    for (const func of config?.functions ?? []) {
-      if (this._funcs.has(func.name)) {
-        throw new Error(`engine config contains duplicated functions of 
-          name ${func.name}`);
-      } else {
-        this._funcs.set(func.name, func);
-      }
-    }
-
-    this._consts = new Map();
-    for (const constant of config?.constants ?? []) {
-      if (this._consts.has(constant.name)) {
-        throw new Error(`engine config contains duplicated constants of 
-          name ${constant.name}`);
-      } else {
-        this._consts.set(constant.name, constant);
-      }
-    }
+    this._funcs = config.functions;
+    this._consts = config.constants;
 
     this._file = [];
     this._vars = [];
@@ -78,12 +59,11 @@ export class Engine {
 
     // get line number of line change
     let i = this.invalidateCaches(file);
-    console.log({ i });
 
     // load varaibles defined previously
-    const stack = new Map<string, BigNumber | null>();
+    const stack = new Map<string, BigNumber>();
     for (let j = 0; j < i; j++) {
-      if (this._vars[i]) {
+      if (this._vars[j]) {
         stack.set(this._vars[j], this._results[j])
       }
     }
@@ -104,6 +84,8 @@ export class Engine {
       this._parseErrors.push(parser.errors);
 
       try {
+        interpreter.funcs = this._funcs;
+        interpreter.consts = this._consts;
         const { variable, value } = interpreter.lines(cst, stack)[0];
         this._vars.push(variable);
         this._results.push(value);
@@ -111,9 +93,9 @@ export class Engine {
           stack.set(variable, value);
         }
       } catch (e) {
-        console.log(e);
+       console.log(e);
         this._vars.push(null);
-        this._results.push(null);
+        this._results.push(new BigNumber(NaN));
       }
     }
 

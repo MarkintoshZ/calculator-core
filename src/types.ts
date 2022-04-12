@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 
 export interface Func {
   name: string;
-  callback: (args: BigNumber[]) => BigNumber | null;
+  callback: (args: BigNumber[]) => BigNumber;
   docs: string;
 }
 
