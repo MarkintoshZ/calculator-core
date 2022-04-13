@@ -9,7 +9,7 @@ class Engine {
     constructor(config) {
         this.reloadWith(config);
     }
-    get file() { return this._file; }
+    get file() { return this._linesCache; }
     get vars() { return this._vars; }
     get tokens() { return this._tokens; }
     get lexErrors() { return this._lexErrors; }
@@ -22,25 +22,25 @@ class Engine {
     }) {
         this._funcs = config.functions;
         this._consts = config.constants;
-        this._file = [];
+        this._linesCache = [];
         this._vars = [];
         this._tokens = [];
         this._lexErrors = [];
         this._parseErrors = [];
         this._results = [];
     }
-    execute(file) {
-        if (file === this._file && this._tokens.length !== 0)
+    execute(lines) {
+        if (lines === this._linesCache && this._tokens.length !== 0)
             return;
-        let i = this.invalidateCaches(file);
+        let i = this.invalidateCaches(lines);
         const stack = new Map();
         for (let j = 0; j < i; j++) {
             if (this._vars[j]) {
                 stack.set(this._vars[j], this._results[j]);
             }
         }
-        for (; i < file.length; i++) {
-            const line = file[i];
+        for (; i < lines.length; i++) {
+            const line = lines[i];
             const { tokens, errors } = lexer_1.lexer.tokenize(line);
             this.tokens.push(tokens);
             this._lexErrors.push(errors);
@@ -63,12 +63,12 @@ class Engine {
                 this._results.push(new bignumber_js_1.default(NaN));
             }
         }
-        this._file = file;
+        this._linesCache = lines;
     }
     invalidateCaches(file) {
         let i;
-        for (i = 0; i < Math.min(file.length, this._file.length); i++) {
-            if (file[i] !== this._file[i]) {
+        for (i = 0; i < Math.min(file.length, this._linesCache.length); i++) {
+            if (file[i] !== this._linesCache[i]) {
                 this._vars = this._vars.slice(0, i);
                 this._tokens = this._tokens.slice(0, i);
                 this._lexErrors = this._lexErrors.slice(0, i);

@@ -6,7 +6,7 @@ export interface EngineConfig {
     constants?: Map<string, Const>;
 }
 export declare class Engine {
-    private _file;
+    private _linesCache;
     private _vars;
     private _tokens;
     private _lexErrors;
@@ -23,6 +23,6 @@ export declare class Engine {
     get constants(): Map<string, Const>;
     constructor(config?: EngineConfig);
     reloadWith(config?: EngineConfig): void;
-    execute(file: string[]): void;
+    execute(lines: string[]): void;
     private invalidateCaches;
 }
