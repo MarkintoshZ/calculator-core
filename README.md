@@ -1,15 +1,25 @@
 # Calculator Core
 
 ## What is this?
-Highly extensible interpreter for a simple calculator language.
+Highly extensible interpreter for a simple calculator language. The desktop app will be open sourced soon.
 ```ts
 import { Engine, StandardFunctions } from "calculator-core";
 
-const engine = new Engine({ functions: StandardFunctions });
+const my_func = {
+  name: 'meaningOfTheUniverse',
+  callback: (_) => new BigNumber(42);
+  docs: 'returns the meaning of the universe',
+}
+
+const functions = new Map(StandardFunctions);
+functions['meaningOfTheUniverse'] = my_func;
+
+const engine = new Engine({ functions });
 engine.execute([
-  "ln(e ^ mean(1, 2, 6/2))",
+  "a = ln(e ^ mean(1, 2, 6/2))",
+  "meaningOfTheUniverse() / a",
 ]);
-console.log(engine.results); // results is [new BigNumber(2)]
+console.log(engine.results); // result: [new BigNumber(2), new BigNumber(21)]
 ```
 
 ## Getting Started
