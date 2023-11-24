@@ -4,7 +4,8 @@ export { lexer } from './lexer';
 export { parser } from './parser';
 export { interpreter } from './interpreter';
 export { Engine } from './engine';
-export { StandardFunctions } from './functions';
+export { StandardFunctions, StandardConstants } from './stdlib';
+export { Func, Const } from "./types";
 
 // The following are for testing purposes only
 // import { ILexingError, IRecognitionException } from 'chevrotain';

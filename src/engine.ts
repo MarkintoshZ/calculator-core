@@ -56,14 +56,9 @@ export class Engine {
    * Reload the engine with new configuration.
    * @param config EngineConfig
    */
-  public reloadWith(
-    config: EngineConfig = {
-      functions: new Map(),
-      constants: new Map(),
-    },
-  ): void {
-    this._funcs = config.functions;
-    this._consts = config.constants;
+  public reloadWith(config: EngineConfig): void {
+    this._funcs = config.functions ?? new Map();
+    this._consts = config.constants ?? new Map();
 
     this._linesCache = [];
     this._vars = [];
@@ -85,10 +80,11 @@ export class Engine {
     let i = this.invalidateCaches(lines);
 
     // load varaibles defined previously
-    const stack = new Map<string, BigNumber>();
+    const env = new Map<string, BigNumber>();
+    this.constants.forEach(c => env.set(c.name, c.value));
     for (let j = 0; j < i; j++) {
       if (this._vars[j]) {
-        stack.set(this._vars[j], this._results[j])
+        env.set(this._vars[j], this._results[j])
       }
     }
 
@@ -110,11 +106,11 @@ export class Engine {
       try {
         interpreter.funcs = this._funcs;
         interpreter.consts = this._consts;
-        const { variable, value } = interpreter.lines(cst, stack)[0];
+        const { variable, value } = interpreter.lines(cst, env)[0];
         this._vars.push(variable);
         this._results.push(value);
         if (variable) {
-          stack.set(variable, value);
+          env.set(variable, value);
         }
       } catch (e) {
         console.log(e);
@@ -126,12 +122,12 @@ export class Engine {
     this._linesCache = lines;
   }
 
-  private invalidateCaches(file: string[]): number {
+  private invalidateCaches(buffers: string[]): number {
     // Only update the lines after the code change
     // Find the index where cache should be invalidated
     let i: number;
-    for (i = 0; i < Math.min(file.length, this._linesCache.length); i++) {
-      if (file[i] !== this._linesCache[i]) {
+    for (i = 0; i < Math.min(buffers.length, this._linesCache.length); i++) {
+      if (buffers[i] !== this._linesCache[i]) {
         this._vars = this._vars.slice(0, i);
         this._tokens = this._tokens.slice(0, i);
         this._lexErrors = this._lexErrors.slice(0, i);
@@ -140,11 +136,11 @@ export class Engine {
         break;
       }
     }
-    this._vars = this._vars.slice(0, file.length);
-    this._tokens = this._tokens.slice(0, file.length);
-    this._lexErrors = this._lexErrors.slice(0, file.length);
-    this._parseErrors = this._parseErrors.slice(0, file.length);
-    this._results = this._results.slice(0, file.length);
+    this._vars = this._vars.slice(0, buffers.length);
+    this._tokens = this._tokens.slice(0, buffers.length);
+    this._lexErrors = this._lexErrors.slice(0, buffers.length);
+    this._parseErrors = this._parseErrors.slice(0, buffers.length);
+    this._results = this._results.slice(0, buffers.length);
     return i;
   }
 }

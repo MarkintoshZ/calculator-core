@@ -22,7 +22,7 @@ export declare class Engine {
     get functions(): Map<string, Func>;
     get constants(): Map<string, Const>;
     constructor(config?: EngineConfig);
-    reloadWith(config?: EngineConfig): void;
+    reloadWith(config: EngineConfig): void;
     execute(lines: string[]): void;
     private invalidateCaches;
 }

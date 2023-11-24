@@ -16,12 +16,10 @@ class Engine {
     get results() { return this._results; }
     get functions() { return this._funcs; }
     get constants() { return this._consts; }
-    reloadWith(config = {
-        functions: new Map(),
-        constants: new Map(),
-    }) {
-        this._funcs = config.functions;
-        this._consts = config.constants;
+    reloadWith(config) {
+        var _a, _b;
+        this._funcs = (_a = config.functions) !== null && _a !== void 0 ? _a : new Map();
+        this._consts = (_b = config.constants) !== null && _b !== void 0 ? _b : new Map();
         this._linesCache = [];
         this._vars = [];
         this._tokens = [];
@@ -33,10 +31,11 @@ class Engine {
         if (lines === this._linesCache && this._tokens.length !== 0)
             return;
         let i = this.invalidateCaches(lines);
-        const stack = new Map();
+        const env = new Map();
+        this.constants.forEach(c => env.set(c.name, c.value));
         for (let j = 0; j < i; j++) {
             if (this._vars[j]) {
-                stack.set(this._vars[j], this._results[j]);
+                env.set(this._vars[j], this._results[j]);
             }
         }
         for (; i < lines.length; i++) {
@@ -50,11 +49,11 @@ class Engine {
             try {
                 interpreter_1.interpreter.funcs = this._funcs;
                 interpreter_1.interpreter.consts = this._consts;
-                const { variable, value } = interpreter_1.interpreter.lines(cst, stack)[0];
+                const { variable, value } = interpreter_1.interpreter.lines(cst, env)[0];
                 this._vars.push(variable);
                 this._results.push(value);
                 if (variable) {
-                    stack.set(variable, value);
+                    env.set(variable, value);
                 }
             }
             catch (e) {
@@ -65,10 +64,10 @@ class Engine {
         }
         this._linesCache = lines;
     }
-    invalidateCaches(file) {
+    invalidateCaches(buffers) {
         let i;
-        for (i = 0; i < Math.min(file.length, this._linesCache.length); i++) {
-            if (file[i] !== this._linesCache[i]) {
+        for (i = 0; i < Math.min(buffers.length, this._linesCache.length); i++) {
+            if (buffers[i] !== this._linesCache[i]) {
                 this._vars = this._vars.slice(0, i);
                 this._tokens = this._tokens.slice(0, i);
                 this._lexErrors = this._lexErrors.slice(0, i);
@@ -77,11 +76,11 @@ class Engine {
                 break;
             }
         }
-        this._vars = this._vars.slice(0, file.length);
-        this._tokens = this._tokens.slice(0, file.length);
-        this._lexErrors = this._lexErrors.slice(0, file.length);
-        this._parseErrors = this._parseErrors.slice(0, file.length);
-        this._results = this._results.slice(0, file.length);
+        this._vars = this._vars.slice(0, buffers.length);
+        this._tokens = this._tokens.slice(0, buffers.length);
+        this._lexErrors = this._lexErrors.slice(0, buffers.length);
+        this._parseErrors = this._parseErrors.slice(0, buffers.length);
+        this._results = this._results.slice(0, buffers.length);
         return i;
     }
 }

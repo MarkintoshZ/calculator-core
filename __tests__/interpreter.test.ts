@@ -1,7 +1,7 @@
 import { BigNumber } from 'bignumber.js';
 import { ILexingError, IRecognitionException } from 'chevrotain';
 import { lexer, parser, interpreter } from '../src';
-import { StandardFunctions } from '../src/functions';
+import { StandardFunctions } from '../src';
 
 interface ParsedResult {
   result: BigNumber[];
