@@ -17,7 +17,7 @@ exports.AssignOperator = (0, chevrotain_1.createToken)({
 });
 exports.Identifier = (0, chevrotain_1.createToken)({
     name: 'Identifier',
-    pattern: /[a-zA-Z]\w*/,
+    pattern: /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*/,
 });
 exports.AdditionOperator = (0, chevrotain_1.createToken)({
     name: 'AdditionOperator',

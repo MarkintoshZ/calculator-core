@@ -18,7 +18,7 @@ export const AssignOperator = createToken({
 });
 export const Identifier = createToken({
   name: 'Identifier',
-  pattern: /[a-zA-Z]\w*/,
+  pattern: /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*/,
 });
 
 export const AdditionOperator = createToken({

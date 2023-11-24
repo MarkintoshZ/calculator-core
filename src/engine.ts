@@ -117,7 +117,7 @@ export class Engine {
           stack.set(variable, value);
         }
       } catch (e) {
-       console.log(e);
+        console.log(e);
         this._vars.push(null);
         this._results.push(new BigNumber(NaN));
       }
