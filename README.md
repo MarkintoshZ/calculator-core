@@ -19,7 +19,6 @@ const my_func: Func = {
 
 const functions = new Map(StandardFunctions);
 functions.set('inverse', my_func);
-console.log(functions);
 
 const engine = new Engine({ functions, constants: StandardConstants });
 engine.execute([
